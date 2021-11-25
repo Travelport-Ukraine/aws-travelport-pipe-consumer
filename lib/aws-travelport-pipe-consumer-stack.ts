@@ -7,9 +7,10 @@ import * as ecsPatterns from '@aws-cdk/aws-ecs-patterns';
 import * as s3 from '@aws-cdk/aws-s3';
 import { Peer, Vpc } from '@aws-cdk/aws-ec2';
 
+// eStreaming Pipe data provider AWS Account number
+const ENDPOINT_ALLOWED_PRINCIPAL = '408064982279';
 const ELB_PORT = 80;
 const CONTAINER_PORT = 8080;
-const ENDPOINT_ALLOWED_PRINCIPAL = '408064982279';
 
 const appPrefix = 'tvpt-pipe';
 export class AwsTravelportPipeConsumerStack extends cdk.Stack {
@@ -26,6 +27,8 @@ export class AwsTravelportPipeConsumerStack extends cdk.Stack {
 
     // Create a new VPC because any existing can have a certain constrains
     // https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html
+    // VPC will be created in accordance with all best practices implemented in CDK
+    // https://docs.aws.amazon.com/cdk/api/latest/docs/aws-ec2-readme.html
     const newVpc = new ec2.Vpc(
       this,
       `${appPrefix}-vpc`,
@@ -43,7 +46,6 @@ export class AwsTravelportPipeConsumerStack extends cdk.Stack {
     const bucket = new s3.Bucket(this, `${appPrefix}-bucket`, {
       autoDeleteObjects: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      bucketName: `${appPrefix}-bucket`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
@@ -69,12 +71,16 @@ export class AwsTravelportPipeConsumerStack extends cdk.Stack {
           new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
             actions: ['S3:*'],
-            resources: [`${bucket.bucketArn}/*`],
+            resources: [bucket.arnForObjects('*')],
           }),
         ],
       }),
     );
 
+    // Creating Network ELB, ECS Service, ECS Task Definition,
+    // Uploading application Docker image and few related stuff
+    // For the sake of simplicity, CDK patten is used
+    // https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-ecs-patterns.NetworkLoadBalancedFargateService.html
     const loadBalancedFargateService = new ecsPatterns.NetworkLoadBalancedFargateService(this, `${appPrefix}-service`, {
       cluster,
       cpu: 1024,
@@ -95,12 +101,15 @@ export class AwsTravelportPipeConsumerStack extends cdk.Stack {
       },
     });
 
+    // Allow any traffic within VPC to container's PORT
     loadBalancedFargateService.service.connections.allowFrom(
       Peer.ipv4(newVpc.vpcCidrBlock),
       ec2.Port.tcp(CONTAINER_PORT),
       `Allow any traffic from VPC to Fargate service to ${CONTAINER_PORT} port`,
     );
 
+    // Setup automatic scaling IN & OUT of number of tasks 
+    // based on CPU and/or memory consumption
     const scalableTarget = loadBalancedFargateService.service.autoScaleTaskCount({
       minCapacity: 1,
       maxCapacity: 25,
@@ -114,6 +123,9 @@ export class AwsTravelportPipeConsumerStack extends cdk.Stack {
       targetUtilizationPercent: 75,
     });
 
+    // Attaching AWS Endpoint Service to Network ELB
+    // It will allow to send data without living AWS network
+    // https://docs.aws.amazon.com/vpc/latest/privatelink/endpoint-service-overview.html
     const endpointServiceForTVPT = new ec2.VpcEndpointService(this, `${appPrefix}-EndpointService`, {
       vpcEndpointServiceLoadBalancers: [loadBalancedFargateService.loadBalancer],
       acceptanceRequired: false,
