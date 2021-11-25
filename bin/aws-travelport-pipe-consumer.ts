@@ -1,6 +1,8 @@
 #!/usr/bin/env node
+/* eslint-disable no-new */
 import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
+// eslint-disable-next-line import/no-unresolved
 import { AwsTravelportPipeConsumerStack } from '../lib/aws-travelport-pipe-consumer-stack';
 
 const app = new cdk.App();
