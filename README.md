@@ -6,7 +6,7 @@
 
 ## Solution overview
 
-This is an example of eStreaming pipe consumer for AWS Endpoint Service for eStreaming Pipe. Some of our customers fill difficulties during the setup of infrastructure required to receive eStreaming data. Especially when it comes to AWS-to-AWS connection. This open-source project allows you to set up the necessary environment in a few simple steps. The resulting infrastructure requires no action to scale up & down. The project is built by following all best practices ready to work with a very high load.
+This is an example of eStreaming pipe consumer with AWS Endpoint Service for eStreaming Pipe. Some of our customers fill difficulties during the setup of infrastructure required to receive eStreaming data. Especially when it comes to AWS-to-AWS connection. This open-source project allows you to set up the necessary environment in a few simple steps. The resulting infrastructure requires no action to scale up & down. The project is built by following all best practices ready to work with a very high load.
 
 The project is using AWS Fully Managed Services _only_. So you should not think about operating systems, physical or virtual machines, or underlying software. All patching, updates, provisioning, scaling, backups, etc will be done for you under the hood.
 
