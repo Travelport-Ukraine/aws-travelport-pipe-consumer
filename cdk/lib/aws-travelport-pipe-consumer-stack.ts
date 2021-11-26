@@ -92,7 +92,7 @@ export class AwsTravelportPipeConsumerStack extends cdk.Stack {
       maxHealthyPercent: 200,
       minHealthyPercent: 100,
       taskImageOptions: {
-        image: ecs.ContainerImage.fromAsset('resources/docker'),
+        image: ecs.ContainerImage.fromAsset('../src/docker'),
         containerPort: CONTAINER_PORT,
         taskRole,
         environment: {
