@@ -38,11 +38,10 @@ This project is using [AWS Cloud Development Kit](https://aws.amazon.com/cdk/) t
 
 ### AWS Cloud Development Kit install
 
-Go to  project root directory and run following commands
+Install CDK and Typescript
 
 ```bash
-cd cdk
-npm install -g aws-cdk
+npm install -g aws-cdk typescript
 cdk --version
 ```
 
@@ -55,6 +54,13 @@ cdk bootstrap aws://ACCOUNT-NUMBER/eu-west-1
 ```
 
 ### Project deployment
+
+Go to  project root directory and run following commends to install dependencies
+
+```bash
+cd cdk
+npm i
+```
 
 Check AWS CloudFormation stack which will be deployed
 
