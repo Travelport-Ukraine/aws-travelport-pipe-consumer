@@ -1,11 +1,14 @@
 /* eslint-disable import/prefer-default-export */
-import * as cdk from '@aws-cdk/core';
-import * as ec2 from '@aws-cdk/aws-ec2';
-import * as ecs from '@aws-cdk/aws-ecs';
-import * as iam from '@aws-cdk/aws-iam';
-import * as ecsPatterns from '@aws-cdk/aws-ecs-patterns';
-import * as s3 from '@aws-cdk/aws-s3';
-import { Peer, Vpc } from '@aws-cdk/aws-ec2';
+// import * as cdk from '@aws-cdk/core';
+// import * as ec2 from '@aws-cdk/aws-ec2';
+// import * as ecs from '@aws-cdk/aws-ecs';
+// import * as iam from '@aws-cdk/aws-iam';
+// import * as ecsPatterns from '@aws-cdk/aws-ecs-patterns';
+// import * as s3 from '@aws-cdk/aws-s3';
+// import { Peer, Vpc } from '@aws-cdk/aws-ec2';
+import { Construct } from 'constructs';
+import { Stack, StackProps, Tags, RemovalPolicy, CfnOutput } from 'aws-cdk-lib';
+import { aws_ec2 as ec2, aws_ecs as ecs, aws_ecs_patterns as ecsPatterns, aws_elasticloadbalancingv2 as elb2, aws_iam as iam, aws_logs as cwl, aws_s3 as s3 } from 'aws-cdk-lib';
 
 // eStreaming Pipe data provider AWS Account number
 const ENDPOINT_ALLOWED_PRINCIPAL = '408064982279';
@@ -13,17 +16,17 @@ const ELB_PORT = 80;
 const CONTAINER_PORT = 8080;
 
 const appPrefix = 'tvpt-pipe';
-export class AwsTravelportPipeConsumerStack extends cdk.Stack {
+export class AwsTravelportPipeConsumerStack extends Stack {
   // eslint-disable-next-line class-methods-use-this
   get availabilityZones(): string[] {
     return ['eu-west-1a', 'eu-west-1b', 'eu-west-1c'];
   }
 
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
     // Tag everything
-    cdk.Tags.of(this).add('app', appPrefix);
+    Tags.of(this).add('app', appPrefix);
 
     // Create a new VPC because any existing can have a certain constrains
     // https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html
@@ -45,7 +48,7 @@ export class AwsTravelportPipeConsumerStack extends cdk.Stack {
     // Just for the sake of demonstration of data processing.
     const bucket = new s3.Bucket(this, `${appPrefix}-bucket`, {
       autoDeleteObjects: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      removalPolicy: RemovalPolicy.DESTROY,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
     });
 
@@ -103,7 +106,7 @@ export class AwsTravelportPipeConsumerStack extends cdk.Stack {
 
     // Allow any traffic within VPC to container's PORT
     loadBalancedFargateService.service.connections.allowFrom(
-      Peer.ipv4(newVpc.vpcCidrBlock),
+      ec2.Peer.ipv4(newVpc.vpcCidrBlock),
       ec2.Port.tcp(CONTAINER_PORT),
       `Allow any traffic from VPC to Fargate service to ${CONTAINER_PORT} port`,
     );
@@ -133,13 +136,13 @@ export class AwsTravelportPipeConsumerStack extends cdk.Stack {
     });
 
     // eslint-disable-next-line no-new
-    new cdk.CfnOutput(this, `${appPrefix}-VPC-ENDPOINT-NAME`, {
+    new CfnOutput(this, `${appPrefix}-VPC-ENDPOINT-NAME`, {
       exportName: `${appPrefix}-VPC-ENDPOINT-NAME`,
       value: endpointServiceForTVPT.vpcEndpointServiceName,
     });
 
     // eslint-disable-next-line no-new
-    new cdk.CfnOutput(this, `${appPrefix}-S3-WORK-BUCKET`, {
+    new CfnOutput(this, `${appPrefix}-S3-WORK-BUCKET`, {
       exportName: `${appPrefix}-S3-WORK-BUCKET`,
       value: bucket.bucketName,
     });
