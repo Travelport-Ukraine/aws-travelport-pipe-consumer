@@ -1,4 +1,4 @@
-FROM  --platform=linux/arm64 node:slim
+FROM  --platform=linux/x86_64 node:slim
 ENV NODE_ENV production
 
 # Create app directory
